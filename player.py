@@ -23,9 +23,9 @@ def play_as_client(channel: NetworkChannel, num_rounds: int, round=1):
     channel.send(f"{my_roll} {r}")
 
     roll = combine_rolls(my_roll, their_roll)
-    distribution[roll - 1] += 1
 
     print("Roll result:", roll)
+    distribution[roll - 1] += 1
 
     if round < num_rounds:
         play_as_server(channel, num_rounds, round + 1)
@@ -47,9 +47,9 @@ def play_as_server(channel: NetworkChannel, num_rounds: int, round=1):
         raise ValueError("Commitment does not match.")
 
     roll = combine_rolls(my_roll, their_roll)
-    distribution[roll - 1] += 1
 
     print("Roll result:", roll)
+    distribution[roll - 1] += 1
 
     if round < num_rounds:
         play_as_client(channel, num_rounds, round + 1)
@@ -91,5 +91,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-    print("Distribution of rolls:", ", ".join(f"{i + 1}: {x}" for i,
-          x in enumerate(distribution)))
+    print("Distribution of rolls:", distribution)
