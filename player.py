@@ -1,9 +1,15 @@
 import random
+import sys
 
 from network import NetworkChannel, init_client, init_server
 import utils
 
+sys.setrecursionlimit(10000)
+
 COMMITMENT_RAND_BITS = 256
+
+
+distribution = [0] * 6
 
 
 def play_as_client(channel: NetworkChannel, num_rounds: int, round=1):
@@ -16,7 +22,10 @@ def play_as_client(channel: NetworkChannel, num_rounds: int, round=1):
     their_roll = int(channel.receive())
     channel.send(f"{my_roll} {r}")
 
-    print("Roll result:", combine_rolls(my_roll, their_roll))
+    roll = combine_rolls(my_roll, their_roll)
+    distribution[roll - 1] += 1
+
+    print("Roll result:", roll)
 
     if round < num_rounds:
         play_as_server(channel, num_rounds, round + 1)
@@ -30,14 +39,17 @@ def play_as_server(channel: NetworkChannel, num_rounds: int, round=1):
 
     commitment = channel.receive()
     channel.send(f"{my_roll}")
-    their_roll, r = channel.receive().split()
+    their_roll, r = (int(x) for x in channel.receive().split())
 
-    if commitment == encode_commitment(their_roll, int(r)):
+    if commitment == encode_commitment(their_roll, r):
         print("Commitment matches roll.")
     else:
         raise ValueError("Commitment does not match.")
 
-    print("Roll result:", combine_rolls(my_roll, int(their_roll)))
+    roll = combine_rolls(my_roll, their_roll)
+    distribution[roll - 1] += 1
+
+    print("Roll result:", roll)
 
     if round < num_rounds:
         play_as_client(channel, num_rounds, round + 1)
@@ -52,7 +64,7 @@ def encode_commitment(message, r: int) -> str:
 
 
 def main():
-    num_rounds = 1
+    num_rounds = 3
     channel = init_client()
     if channel:
         print("Other player is hosting - I will start.")
@@ -78,3 +90,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    print("Distribution of rolls:", ", ".join(f"{i + 1}: {x}" for i,
+          x in enumerate(distribution)))
