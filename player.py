@@ -1,3 +1,4 @@
+import random
 import socket
 from typing import Union
 
@@ -6,15 +7,15 @@ MESSAGE_SIZE = 1024
 
 
 def play_as_client(sock: socket.socket):
-    send_message("Hello, world!", sock)
+    roll = random.randint(1, 6)
+    send_message(f"I rolled {roll}", sock)
     message = receive_message(sock)
-    print(f"Received message {message}")
 
 
 def play_as_server(conn: socket.socket):
+    roll = random.randint(1, 6)
     message = receive_message(conn)
-    print(f"Received {message}")
-    send_message(message, conn)
+    send_message(f"Ok, I rolled {roll}", conn)
 
 
 def init_client(port: int) -> Union[socket.socket, None]:
@@ -42,10 +43,13 @@ def init_server(port: int) -> socket.socket:
 
 
 def receive_message(sock: socket.socket) -> str:
-    return sock.recv(MESSAGE_SIZE).decode("utf-8")
+    message = sock.recv(MESSAGE_SIZE).decode("utf-8")
+    print(f"[RECV] {message}")
+    return message
 
 
 def send_message(message: str, sock: socket.socket):
+    print(f"[SEND] {message}")
     return sock.sendall(bytearray(message, encoding="utf-8"))
 
 
@@ -56,6 +60,7 @@ def main():
         print()
         with sock:
             play_as_client(sock)
+        print()
     else:
         print("Other player is not hosting - I will be the server.")
 
@@ -68,6 +73,8 @@ def main():
 
         print()
         print("Player disconnected.")
+
+    print("Game is finished.")
 
 
 if __name__ == "__main__":
