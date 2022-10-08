@@ -32,9 +32,6 @@ def play_as_client(channel: NetworkChannel, num_rounds: int, round=1):
 
 
 def play_as_server(channel: NetworkChannel, num_rounds: int, round=1):
-    if round > num_rounds:
-        return
-
     my_roll = random.randint(1, 6)
 
     commitment = channel.receive()
