@@ -5,6 +5,18 @@ PORT = 42069
 MESSAGE_SIZE = 1024
 
 
+def play_as_client(sock: socket.socket):
+    send_message("Hello, world!", sock)
+    message = receive_message(sock)
+    print(f"Received message {message}")
+
+
+def play_as_server(conn: socket.socket):
+    message = receive_message(conn)
+    print(f"Received {message}")
+    send_message(message, conn)
+
+
 def init_client(port: int) -> Union[socket.socket, None]:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
@@ -29,30 +41,28 @@ def init_server(port: int) -> socket.socket:
     return conn
 
 
+def receive_message(sock: socket.socket) -> str:
+    return sock.recv(MESSAGE_SIZE).decode("utf-8")
+
+
+def send_message(message: str, sock: socket.socket):
+    return sock.sendall(bytearray(message, encoding="utf-8"))
+
+
 def main():
     sock = init_client(PORT)
     if sock:
         print("Other player is hosting - I will start.")
         print()
-
         with sock:
-            sock.sendall(b"Hello, world!")
-            data = sock.recv(MESSAGE_SIZE)
-            print(f"Received {data!r}")
+            play_as_client(sock)
     else:
         print("Other player is not hosting - I will be the server.")
 
         with init_server(PORT) as conn:
             print()
             try:
-                while True:
-                    data = conn.recv(MESSAGE_SIZE)
-
-                    if not data:
-                        break
-
-                    print(f"Received {data!r}")
-                    conn.sendall(data)
+                play_as_server(conn)
             except ConnectionResetError:
                 pass
 
