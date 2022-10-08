@@ -44,9 +44,7 @@ def play_as_server(channel: NetworkChannel, num_rounds: int, round=1):
 
 
 def combine_rolls(a: int, b: int) -> int:
-    # Only care about 3 bits. If we received more, we just ignore them.
-    combined = (a ^ b) & 0b111
-    return combined % 6 + 1
+    return (a ^ b) % 6 + 1
 
 
 def encode_commitment(message, r: int) -> str:
