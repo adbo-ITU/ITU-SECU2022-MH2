@@ -1,18 +1,47 @@
 import random
 
 from network import NetworkChannel, init_client, init_server
+import utils
+
+COMMITMENT_RAND_BITS = 256
 
 
 def play_as_client(channel: NetworkChannel):
-    roll = random.randint(1, 6)
-    channel.send(f"I rolled {roll}")
-    message = channel.receive()
+    my_roll = random.randint(1, 6)
+
+    r = random.randint(0, 2 ** COMMITMENT_RAND_BITS - 1)
+    commitment = encode_commitment(my_roll, r)
+
+    channel.send(commitment)
+    their_roll = int(channel.receive())
+    channel.send(f"{my_roll} {r}")
+
+    print("Roll result:", combine_rolls(my_roll, their_roll))
 
 
 def play_as_server(channel: NetworkChannel):
-    roll = random.randint(1, 6)
-    message = channel.receive()
-    channel.send(f"Ok, I rolled {roll}")
+    my_roll = random.randint(1, 6)
+
+    commitment = channel.receive()
+    channel.send(f"{my_roll}")
+    their_roll, r = channel.receive().split()
+
+    if commitment == encode_commitment(their_roll, int(r)):
+        print("Commitment matches roll.")
+    else:
+        raise ValueError("Commitment does not match.")
+
+    print("Roll result:", combine_rolls(my_roll, int(their_roll)))
+
+
+def combine_rolls(a: int, b: int) -> int:
+    # Only care about 3 bits. If we received more, we just ignore them.
+    combined = (a ^ b) & 0b111
+    return combined % 6 + 1
+
+
+def encode_commitment(message, r: int) -> str:
+    return utils.hash(f"{r}{message}")
 
 
 def main():
