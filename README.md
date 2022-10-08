@@ -4,7 +4,41 @@ By Adrian Borup (adbo@itu.dk).
 
 ## Instructions for running
 
-TBA.
+TBA. Below is subject to change
+
+From one terminal:
+
+```text
+$ python player.py
+Other player is not hosting - I will be the server.
+Waiting for other player to connect...
+Player connected from 127.0.0.1:58505.
+
+[RECV] 07765bffed0cc3565715b0f004f7318e7142f4fab8c5d119854b2b0aad49c097
+[SEND] 2
+[RECV] 2 6985985727172729537414648167849379876234620424918572855747358844847991317661
+Commitment matches roll.
+Roll result: 1
+
+Player disconnected.
+Game is finished.
+Distribution of rolls: [1, 0, 0, 0, 0, 0]
+```
+
+From another terminal:
+
+```text
+$ python player.py
+Other player is hosting - I will start.
+
+[SEND] 07765bffed0cc3565715b0f004f7318e7142f4fab8c5d119854b2b0aad49c097
+[RECV] 2
+[SEND] 2 6985985727172729537414648167849379876234620424918572855747358844847991317661
+Roll result: 1
+
+Game is finished.
+Distribution of rolls: [1, 0, 0, 0, 0, 0]
+```
 
 ## Assignment text
 

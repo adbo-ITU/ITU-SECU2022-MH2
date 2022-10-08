@@ -61,7 +61,7 @@ def encode_commitment(message, r: int) -> str:
 
 
 def main():
-    num_rounds = 3
+    num_rounds = 1
     channel = init_client()
     if channel:
         print("Other player is hosting - I will start.")
