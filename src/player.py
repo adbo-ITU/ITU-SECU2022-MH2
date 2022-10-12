@@ -67,8 +67,8 @@ def encode_commitment(message, r: int) -> str:
 def main():
     private_key, public_key = generate_key_pair()
 
-    logging.debug(f"Private key: {private_key:x}")
-    logging.debug(f"Public key: {public_key:x}")
+    logging.debug(f"Private key: 0x{private_key:x}")
+    logging.debug(f"Public key: 0x{public_key:x}")
 
     num_rounds = 1
     channel = init_client()
