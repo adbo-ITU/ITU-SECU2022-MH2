@@ -1,8 +1,11 @@
 import random
 import sys
+from cryptography import generate_key_pair
+import logging
 
 from network import NetworkChannel, init_client, init_server
 import utils
+from log import logger
 
 sys.setrecursionlimit(10000)
 
@@ -24,7 +27,7 @@ def play_as_client(channel: NetworkChannel, num_rounds: int, round=1):
 
     roll = combine_rolls(my_roll, their_roll)
 
-    print("Roll result:", roll)
+    logging.info(f"Roll result: {roll}")
     distribution[roll - 1] += 1
 
     if round < num_rounds:
@@ -39,13 +42,14 @@ def play_as_server(channel: NetworkChannel, num_rounds: int, round=1):
     their_roll, r = (int(x) for x in channel.receive().split())
 
     if commitment == encode_commitment(their_roll, r):
-        print("Commitment matches roll.")
+        logging.info("Commitment matches roll.")
     else:
-        raise ValueError("Commitment does not match.")
+        logging.error("Commitment does not match roll.")
+        exit(1)
 
     roll = combine_rolls(my_roll, their_roll)
 
-    print("Roll result:", roll)
+    logging.info(f"Roll result: {roll}")
     distribution[roll - 1] += 1
 
     if round < num_rounds:
@@ -61,31 +65,34 @@ def encode_commitment(message, r: int) -> str:
 
 
 def main():
+    private_key, public_key = generate_key_pair()
+
+    logging.debug(f"Private key: {private_key:x}")
+    logging.debug(f"Public key: {public_key:x}")
+
     num_rounds = 1
     channel = init_client()
     if channel:
-        print("Other player is hosting - I will start.")
-        print()
+        logging.info("Other player is hosting - I will start.")
         with channel:
             play_as_client(channel, num_rounds)
-        print()
     else:
-        print("Other player is not hosting - I will be the server.")
+        logging.info("Other player is not hosting - I will be the server.")
 
         with init_server() as channel:
-            print()
             try:
                 play_as_server(channel, num_rounds)
             except ConnectionResetError:
                 pass
 
-        print()
-        print("Player disconnected.")
+        logging.info("Player disconnected.")
 
-    print("Game is finished.")
+    logging.info("Game is finished.")
 
 
 if __name__ == "__main__":
+    logger.setLevel(logging.DEBUG)
+
     main()
 
-    print("Distribution of rolls:", distribution)
+    logging.debug(f"Distribution of rolls: {distribution}")

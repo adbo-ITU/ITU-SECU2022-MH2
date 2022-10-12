@@ -1,5 +1,6 @@
 import socket
 from typing import Union
+import logging
 
 
 PORT = 42069
@@ -11,12 +12,12 @@ class NetworkChannel:
         self.sock = sock
 
     def send(self, message: str):
-        print(f"[SEND] {message}")
+        logging.debug(f"[SEND] {message}")
         return self.sock.sendall(bytearray(message, encoding="utf-8"))
 
     def receive(self) -> str:
         message = self.sock.recv(MESSAGE_SIZE).decode("utf-8")
-        print(f"[RECV] {message}")
+        logging.debug(f"[RECV] {message}")
         return message
 
     def __enter__(self):
@@ -41,10 +42,10 @@ def init_server() -> NetworkChannel:
     sock.bind(("127.0.0.1", PORT))
     sock.listen()
 
-    print("Waiting for other player to connect...")
+    logging.info("Waiting for other player to connect...")
 
     conn, addr = sock.accept()
 
-    print(f"Player connected from {addr[0]}:{addr[1]}.")
+    logging.info(f"Player connected from {addr[0]}:{addr[1]}.")
 
     return NetworkChannel(conn)
