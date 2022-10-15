@@ -1,6 +1,7 @@
 import random
 import sys
 import logging
+from encryption import EncryptedChannel
 
 from key_exchange import generate_key_pair, authenticated_key_exchange_client, authenticated_key_exchange_server
 from network import NetworkChannel, init_client, init_server
@@ -71,7 +72,8 @@ def handle_client(channel: NetworkChannel, private_key: int):
     logging.debug(
         f"Authenticated key exchange completed with {who_are_they}. Shared key: {shared_key}")
 
-    play_as_client(channel, NUM_ROUNDS)
+    encrypted_channel = EncryptedChannel(channel, shared_key)
+    play_as_client(encrypted_channel, NUM_ROUNDS)
 
 
 def handle_server(channel: NetworkChannel, private_key: int):
@@ -82,7 +84,8 @@ def handle_server(channel: NetworkChannel, private_key: int):
     logging.debug(
         f"Authenticated key exchange completed with {who_are_they}. Shared key: {shared_key}")
 
-    play_as_server(channel, NUM_ROUNDS)
+    encrypted_channel = EncryptedChannel(channel, shared_key)
+    play_as_server(encrypted_channel, NUM_ROUNDS)
 
 
 def init_client_or_server():

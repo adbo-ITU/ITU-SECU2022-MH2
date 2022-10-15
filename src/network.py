@@ -11,12 +11,19 @@ class NetworkChannel:
     def __init__(self, sock: socket.socket):
         self.sock = sock
 
-    def send(self, message: str):
+    def send(self, message: Union[str, bytes]):
         logging.debug(f"[NETWORK SEND] {message}")
-        return self.sock.sendall(bytearray(message, encoding="utf-8"))
+        if type(message) is str:
+            message = bytes(message, encoding="utf-8")
+        return self.sock.sendall(message)
 
     def receive(self) -> str:
         message = self.sock.recv(MESSAGE_SIZE).decode("utf-8")
+        logging.debug(f"[NETWORK RECV] {message}")
+        return message
+
+    def receive_bytes(self) -> bytes:
+        message = self.sock.recv(MESSAGE_SIZE)
         logging.debug(f"[NETWORK RECV] {message}")
         return message
 
