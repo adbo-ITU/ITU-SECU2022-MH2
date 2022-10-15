@@ -63,6 +63,28 @@ def encode_commitment(message, r: int) -> str:
     return utils.hash(f"{r}{message}")
 
 
+def handle_client(channel: NetworkChannel, private_key: int):
+    who_am_i, who_are_they = 'client', 'server'
+    shared_key = authenticated_key_exchange_client(
+        channel, private_key, who_am_i, who_are_they)
+
+    logging.debug(
+        f"Authenticated key exchange completed with {who_are_they}. Shared key: {shared_key}")
+
+    play_as_client(channel, NUM_ROUNDS)
+
+
+def handle_server(channel: NetworkChannel, private_key: int):
+    who_am_i, who_are_they = 'server', 'client'
+    shared_key = authenticated_key_exchange_server(
+        channel, private_key, who_am_i, who_are_they)
+
+    logging.debug(
+        f"Authenticated key exchange completed with {who_are_they}. Shared key: {shared_key}")
+
+    play_as_server(channel, NUM_ROUNDS)
+
+
 def init_client_or_server():
     private_key, public_key = generate_key_pair()
 
@@ -94,28 +116,6 @@ def init_client_or_server():
         logging.info("Player disconnected.")
 
     logging.info("Game is finished.")
-
-
-def handle_client(channel: NetworkChannel, private_key: int):
-    who_am_i, who_are_they = 'client', 'server'
-    shared_key = authenticated_key_exchange_client(
-        channel, private_key, who_am_i, who_are_they)
-
-    logging.debug(
-        f"Authenticated key exchange completed with {who_are_they}. Shared key: {shared_key}")
-
-    play_as_client(channel, NUM_ROUNDS)
-
-
-def handle_server(channel: NetworkChannel, private_key: int):
-    who_am_i, who_are_they = 'server', 'client'
-    shared_key = authenticated_key_exchange_server(
-        channel, private_key, who_am_i, who_are_they)
-
-    logging.debug(
-        f"Authenticated key exchange completed with {who_are_they}. Shared key: {shared_key}")
-
-    play_as_server(channel, NUM_ROUNDS)
 
 
 if __name__ == "__main__":
