@@ -14,8 +14,12 @@ def generate_key_pair():
     return sk, vk
 
 
-def create_key_exchange_payload(dh_public, signing_key):
-    message = f"{dh_public}"
+def create_key_exchange_payload(dh_public, signing_key, sender, recipient):
+    message = to_json({
+        "recipient": recipient,
+        "sender": sender,
+        "dh_public": f"{dh_public}",
+    })
 
     r, s = create_signature(message, signing_key)
 
@@ -32,8 +36,15 @@ def create_key_exchange_payload(dh_public, signing_key):
 
 # Part of our PKI assumption is that the public key has been verified against a
 # trusted certificate authority.
-def verify_key_exchange_payload(sender_payload, sender_public_key):
+def verify_key_exchange_payload(sender_payload, expected_recipient):
     payload = from_json(sender_payload)
+
+    message = from_json(payload['message'])
+    if message['recipient'] != expected_recipient:
+        logging.error("Message is not intended for me.")
+        exit(1)
+
+    sender_public_key = pki.get_public_key(message['sender'])
 
     signature = payload['signature']
     r, s = int(signature['r']), int(signature['s'])
@@ -42,39 +53,39 @@ def verify_key_exchange_payload(sender_payload, sender_public_key):
         logging.error("Signature does not match public key.")
         exit(1)
 
-    message = int(payload['message'])
+    db_public = int(message['dh_public'])
 
-    return message
+    return db_public
 
 
-def authenticated_key_exchange_client(channel: NetworkChannel, signing_key: int):
+def authenticated_key_exchange_client(channel: NetworkChannel, signing_key: int, who_am_i: str, who_are_they: str):
     my_dh_secret, my_dh_public = generate_key_pair()
-    payload = create_key_exchange_payload(my_dh_public, signing_key)
+    payload = create_key_exchange_payload(
+        my_dh_public, signing_key, sender=who_am_i, recipient=who_are_they)
 
     logging.debug(
         f"Diffie-Hellman key pair - Private: {my_dh_public}, Public: {my_dh_secret}")
 
     channel.send(payload)
 
-    their_public_key = pki.get_public_key('server')
     their_payload = channel.receive()
     their_dh_public = verify_key_exchange_payload(
-        their_payload, their_public_key)
+        their_payload, expected_recipient=who_am_i)
 
     return generate_shared_diffie_hellman_secret(their_dh_public, my_dh_secret)
 
 
-def authenticated_key_exchange_server(channel: NetworkChannel, signing_key: int):
+def authenticated_key_exchange_server(channel: NetworkChannel, signing_key: int, who_am_i: str, who_are_they: str):
     my_dh_secret, my_dh_public = generate_key_pair()
-    payload = create_key_exchange_payload(my_dh_public, signing_key)
+    payload = create_key_exchange_payload(
+        my_dh_public, signing_key, sender=who_am_i, recipient=who_are_they)
 
     logging.debug(
         f"Diffie-Hellman key pair - Private: {my_dh_public}, Public: {my_dh_secret}")
 
-    their_public_key = pki.get_public_key('client')
     their_payload = channel.receive()
     their_dh_public = verify_key_exchange_payload(
-        their_payload, their_public_key)
+        their_payload, expected_recipient=who_am_i)
 
     channel.send(payload)
 
