@@ -4,6 +4,13 @@ By Adrian Borup (adbo@itu.dk).
 
 ## Dependencies
 
+The code is written with Python 3.9:
+
+```sh
+$ python --version
+Python 3.9.13
+```
+
 I use `pyaes` for AES encryption. Install it with `pip`:
 
 ```sh
