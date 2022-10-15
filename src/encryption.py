@@ -21,19 +21,31 @@ def decrypt(ciphertext, symmetric_key: int):
     return message.decode("utf-8")
 
 
+def create_message_authentication_code(message: str, symmetric_key: int):
+    return hash(f"{message}{str(symmetric_key)}")
+
+
 class EncryptedChannel():
     def __init__(self, channel: NetworkChannel, symmetric_key: int):
         self.channel = channel
         self.symmetric_key = symmetric_key
 
     def send(self, message: str):
-        logging.debug(f"[SEND + ENCRYPT] {message}")
-        encrypted = encrypt(message, self.symmetric_key)
+        mac = create_message_authentication_code(message, self.symmetric_key)
+        logging.debug(f"[SEND: TO ENCRYPT] Message: '{message}', MAC: '{mac}'")
+        message_with_mac = f"{message}{mac}"
+        encrypted = encrypt(message_with_mac, self.symmetric_key)
         return self.channel.send(encrypted)
 
     def receive(self) -> str:
         ciphertext = self.channel.receive_bytes()
-        message = decrypt(ciphertext, self.symmetric_key)
-        # check MAC
-        logging.debug(f"[RECV + DECRYPT] {message}")
+        message_with_mac = decrypt(ciphertext, self.symmetric_key)
+        message, mac = message_with_mac[:-64], message_with_mac[-64:]
+
+        logging.debug(f"[RECV: DECRYPTED] Message: '{message}', MAC: '{mac}'")
+
+        if mac != create_message_authentication_code(message, self.symmetric_key):
+            logging.error(f"MAC did not match message")
+            exit(1)
+
         return message
