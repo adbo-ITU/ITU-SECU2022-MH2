@@ -1,16 +1,15 @@
 import random
 import sys
-from cryptography import generate_key_pair
 import logging
 
+from key_exchange import generate_key_pair, authenticated_key_exchange_client, authenticated_key_exchange_server
 from network import NetworkChannel, init_client, init_server
+import pki
 import utils
 from log import logger
+from constants import COMMITMENT_RAND_BITS, NUM_ROUNDS
 
 sys.setrecursionlimit(10000)
-
-COMMITMENT_RAND_BITS = 256
-
 
 distribution = [0] * 6
 
@@ -64,24 +63,31 @@ def encode_commitment(message, r: int) -> str:
     return utils.hash(f"{r}{message}")
 
 
-def main():
+def init_client_or_server():
     private_key, public_key = generate_key_pair()
 
-    logging.debug(f"Private key: 0x{private_key:x}")
-    logging.debug(f"Public key: 0x{public_key:x}")
+    logging.debug(f"My long-term private key: {private_key}")
+    logging.debug(f"My long-term public key: {public_key}")
 
-    num_rounds = 1
     channel = init_client()
     if channel:
         logging.info("Other player is hosting - I will start.")
+
+        # Not part of the protocol - but we just need an easy way to know the
+        # each others public keys. Having a solid PKI is an assumption we make.
+        pki.set_public_key('client', public_key)
+
         with channel:
-            play_as_client(channel, num_rounds)
+            handle_client(channel, private_key)
     else:
         logging.info("Other player is not hosting - I will be the server.")
 
+        # Same as with the client
+        pki.set_public_key('server', public_key)
+
         with init_server() as channel:
             try:
-                play_as_server(channel, num_rounds)
+                handle_server(channel, private_key)
             except ConnectionResetError:
                 pass
 
@@ -90,9 +96,27 @@ def main():
     logging.info("Game is finished.")
 
 
+def handle_client(channel: NetworkChannel, private_key: int):
+    shared_key = authenticated_key_exchange_client(
+        channel, private_key)
+
+    logging.debug(f"Shared key: {shared_key}")
+
+    play_as_client(channel, NUM_ROUNDS)
+
+
+def handle_server(channel: NetworkChannel, private_key: int):
+    shared_key = authenticated_key_exchange_server(
+        channel, private_key)
+
+    logging.debug(f"Shared key: {shared_key}")
+
+    play_as_server(channel, NUM_ROUNDS)
+
+
 if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
 
-    main()
+    init_client_or_server()
 
     logging.debug(f"Distribution of rolls: {distribution}")

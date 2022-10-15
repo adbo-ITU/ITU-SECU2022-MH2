@@ -166,3 +166,5 @@ cython_debug/
 # End of https://www.toptal.com/developers/gitignore/api/python
 
 notes.md
+public_keys.json
+.vscode

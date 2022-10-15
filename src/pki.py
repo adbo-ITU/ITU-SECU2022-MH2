@@ -5,11 +5,13 @@ PUBLIC_KEYS_FILE = "public_keys.json"
 
 
 def set_public_key(name: str, public_key: int):
-    with open(PUBLIC_KEYS_FILE, "r") as f:
-        try:
+    try:
+        with open(PUBLIC_KEYS_FILE, "r") as f:
             public_keys = json.load(f)
-        except json.JSONDecodeError:
-            public_keys = {}
+    except FileNotFoundError:
+        public_keys = {}
+    except json.JSONDecodeError:
+        public_keys = {}
 
     public_keys[name] = str(public_key)
 

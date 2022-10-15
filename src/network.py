@@ -4,7 +4,7 @@ import logging
 
 
 PORT = 42069
-MESSAGE_SIZE = 1024
+MESSAGE_SIZE = 16 * 1024
 
 
 class NetworkChannel:
@@ -12,12 +12,12 @@ class NetworkChannel:
         self.sock = sock
 
     def send(self, message: str):
-        logging.debug(f"[SEND] {message}")
+        logging.debug(f"[NETWORK SEND] {message}")
         return self.sock.sendall(bytearray(message, encoding="utf-8"))
 
     def receive(self) -> str:
         message = self.sock.recv(MESSAGE_SIZE).decode("utf-8")
-        logging.debug(f"[RECV] {message}")
+        logging.debug(f"[NETWORK RECV] {message}")
         return message
 
     def __enter__(self):

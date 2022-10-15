@@ -1,6 +1,7 @@
 import hashlib
 from math import gcd
 import random
+import json
 
 
 def hash(data) -> str:
@@ -14,3 +15,11 @@ def random_coprime(n):
         x = random.randint(1, n)
         if gcd(x, n) == 1:
             return x
+
+
+def to_json(obj):
+    return json.dumps(obj, separators=(',', ':'))
+
+
+def from_json(s):
+    return json.loads(s)
