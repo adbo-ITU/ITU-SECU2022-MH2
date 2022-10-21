@@ -118,4 +118,16 @@ The methods used in the protocol have been inspired heavily by TLS. That being s
 
 ## Implementing the protocol
 
-TBA..
+The implementation has been written using Python (version 3.9.13) using communication via TCP/IP, and the code lives within the `src` directory handed in alongside this report.
+
+What follows is an overview of the files:
+
+- `player.py`: the entry point and the main logic the game itself
+- `pki.py`: a wrapper that acts as our PKI
+- `key_exchange.py`: performing an authenticated key exchange
+- `signature.py`: creating and verifying signatures
+- `encryption.py`: a wrapper for encrypted and MAC-validated network communication
+- `network.py`: a wrapper for communicating over the network
+- `constants.py`: the primes and random bit sizes used
+
+For instructions on running the program and seeing sample output, see the README file. To view it online, you can find the repository at <https://github.com/adbo-ITU/ITU-SECU2022-MH2>.
